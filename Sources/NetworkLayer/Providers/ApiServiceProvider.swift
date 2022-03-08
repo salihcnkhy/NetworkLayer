@@ -14,7 +14,6 @@ open class ApiServiceProvider: URLRequestConvertible {
     private var path: String?
     private var isAuthRequested: Bool
     private var data: Encodable?
-    private var defaultQueryParams: [URLQueryItem]?
     
     private let httpPropertyProvider: HttpPropertyProviderProtocol
     
@@ -24,13 +23,12 @@ open class ApiServiceProvider: URLRequestConvertible {
     ///   - path: url path, default value is nil
     ///   - isAuthRequested: it's used to pass accessToken to header or not. Default value is true
     ///   - data: Codable data. If request is post, patch or put it's used as body otherwise as query string
-    public init(httpPropertyProvider: HttpPropertyProviderProtocol, method: HTTPMethod = .get, path: String? = nil, data: Encodable? = nil, defaultQueryParams: [URLQueryItem]? = nil, isAuthRequested: Bool = true) {
+    public init(httpPropertyProvider: HttpPropertyProviderProtocol, method: HTTPMethod = .get, path: String? = nil, data: Encodable? = nil, isAuthRequested: Bool = true) {
         self.method = method
         self.path = path
         self.isAuthRequested = isAuthRequested // Later will be using
         self.data = data
         self.httpPropertyProvider = httpPropertyProvider
-        self.defaultQueryParams = defaultQueryParams
     }
     
     public func asURLRequest() throws -> URLRequest {
@@ -42,7 +40,7 @@ open class ApiServiceProvider: URLRequestConvertible {
         
         var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: true)!
 
-        if let defaultQueryParams = defaultQueryParams {
+        if let defaultQueryParams = httpPropertyProvider.getDefaultQueryParams() {
             urlComponents.queryItems = defaultQueryParams
         }
 
