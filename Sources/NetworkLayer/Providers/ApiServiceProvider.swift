@@ -8,13 +8,13 @@
 import Alamofire
 import Foundation
 
-open class ApiServiceProvider<T: Encodable>: URLRequestConvertible {
+open class ApiServiceProvider: URLRequestConvertible {
     
     private let baseUrl: String
     private let method: HTTPMethod
     private var path: String?
     private var isAuthRequested: Bool
-    private var data: T?
+    private var data: Encodable?
     private let httpPropertyProvider: HttpPropertyProviderProtocol
     
     /// Description: General Api call service provider. It's create a urlRequestConvertible object to pass as an argument to alamofire url session request
@@ -23,7 +23,7 @@ open class ApiServiceProvider<T: Encodable>: URLRequestConvertible {
     ///   - path: url path, default value is nil
     ///   - isAuthRequested: it's used to pass accessToken to header or not. Default value is true
     ///   - data: Codable data. If request is post, patch or put it's used as body otherwise as query string
-    public init(baseUrl: String, method: HTTPMethod = .get, path: String? = nil, httpPropertyProvider: HttpPropertyProviderProtocol, isAuthRequested: Bool = true, data: T? = nil) {
+    public init(baseUrl: String, method: HTTPMethod = .get, path: String? = nil, httpPropertyProvider: HttpPropertyProviderProtocol, isAuthRequested: Bool = true, data: Encodable? = nil) {
         self.baseUrl = baseUrl
         self.method = method
         self.path = path
@@ -53,7 +53,7 @@ open class ApiServiceProvider<T: Encodable>: URLRequestConvertible {
     }
     
     private var params: Parameters? {
-        return data.asDictionary()
+        return data?.asDictionary()
     }
     
     private var headers: HTTPHeaders {

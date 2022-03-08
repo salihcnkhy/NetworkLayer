@@ -24,7 +24,6 @@ final class NetworkLayerTests: XCTestCase {
         getPublisher2(manager: manager).sink(receiveCompletion: { error in
             print(error)
         }, receiveValue: { (response, server) in
-            print(response, server)
             if response == nil && server != nil {
                 expectation.fulfill()
             }
@@ -34,11 +33,11 @@ final class NetworkLayerTests: XCTestCase {
 
     
     func getPublisher(manager: NetworkManager) -> AnyPublisher<NetworkResponse<SignInResponse, ServerError>, Never> {
-        manager.execute(with: GetStockListServiceProvider())
+        manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "123451656")))
     }
     
     func getPublisher2(manager: NetworkManager) -> AnyPublisher<(SignInResponse?, ServerError?), Error> {
-        manager.execute(with: GetStockListServiceProvider())
+        manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "123451656")))
     }
 }
 
@@ -50,6 +49,10 @@ final class TestEventMonitor: EventMonitor {
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         print(data)
     }
+}
+
+final class MockHttpProperyProvider: HttpPropertyProviderProtocol {
+    
 }
 
 final class TestInterceptor: RequestInterceptor {
@@ -72,9 +75,8 @@ struct SignInRequest: Encodable {
     let password: String
 }
 
-final class GetStockListServiceProvider: ApiServiceProvider<SignInRequest> {
-    init() {
-        let mockRequest = SignInRequest(email: "test@test.com", password: "123451656")
-        super.init(baseUrl: "https://hesabinibil.azurewebsites.net/api", method: .post, path: "/Auth/SignIn", isAuthRequested: false, data: mockRequest)
+final class GetStockListServiceProvider: ApiServiceProvider {
+    init(httpPropertyProvider: HttpPropertyProviderProtocol, request: SignInRequest) {
+        super.init(baseUrl: "https://hesabinibil.azurewebsites.net/api", method: .post, path: "/Auth/SignIn", httpPropertyProvider: httpPropertyProvider, isAuthRequested: false, data: request)
     }
 }
