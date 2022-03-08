@@ -41,40 +41,32 @@ public final class NetworkManager: NetworkMananagerProtocol {
             }.eraseToAnyPublisher()
     }
     
-    public func execute<Response: Decodable, ServerError: Decodable>(with urlRequest: URLRequestConvertible) -> AnyPublisher<(Response?, ServerError?), Error> {
-        let dataPublisher = session.request(urlRequest)
-            .validate() // If server doesn't return 200-299 will cause failure
-            .publishResponse(using: .data)
-            .compactMap { $0.data }
-            .eraseToAnyPublisher()
-        
-        let responsePublisher = dataPublisher
-            .decode(type: Response?.self, decoder: decoder)
-            .print("LOG Response")
-            .tryCatch { error -> Just<Response?> in
-                if error is Swift.DecodingError {
-                    return .init(nil)
-                } else {
-                    throw error
+    public func execute<Response: Decodable, ServerError: ServerErrorProtocol>(with urlRequest: URLRequestConvertible) -> AnyPublisher<Response, ServerError> {
+        session.request(urlRequest)
+            .validate()
+            .publishData()
+            .compactMap { $0.result }
+            .tryMap { (result: Result<Data, AFError>) -> Response in
+                switch result {
+                    case .success(let data):
+                        if let response = try? self.decoder.decode(Response.self, from: data) {
+                            return response
+                        } else if let serverError = try? self.decoder.decode(ServerError.self, from: data) {
+                            throw serverError
+                        } else {
+                            throw ServerError.init(description: "unexpected")
+                        }
+                    case .failure(let failure):
+                        let error = ServerError.init(description: failure.localizedDescription)
+                        throw error
                 }
             }
-            .eraseToAnyPublisher()
-        
-        let serverErrorPublisher = dataPublisher
-            .decode(type: ServerError?.self, decoder: decoder)
-            .print("LOG ServerErrorResponse")
-            .eraseToAnyPublisher()
-            .tryCatch { error -> Just<ServerError?> in
-                if error is Swift.DecodingError {
-                    return .init(nil)
-                } else {
-                    throw error
-                }
-            }
-            .eraseToAnyPublisher()
-        
-        return responsePublisher
-            .zip(serverErrorPublisher)
+            .mapError { $0 as! ServerError }
             .eraseToAnyPublisher()
     }
+}
+
+public protocol ServerErrorProtocol: Decodable, Error {
+    var description: String? { get set }
+    init(description: String?)
 }

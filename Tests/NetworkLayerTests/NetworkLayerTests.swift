@@ -23,21 +23,22 @@ final class NetworkLayerTests: XCTestCase {
         let expectation = expectation(description: "Sink")
         getPublisher2(manager: manager).sink(receiveCompletion: { error in
             print(error)
-        }, receiveValue: { (response, server) in
-            if response == nil && server != nil {
-                expectation.fulfill()
-            }
+            expectation.fulfill()
+        }, receiveValue: { (response) in
+            print(response)
+            expectation.fulfill()
         }).store(in: &cancellables)
         waitForExpectations(timeout: 10)
     }
+
 
     
     func getPublisher(manager: NetworkManager) -> AnyPublisher<NetworkResponse<SignInResponse, ServerError>, Never> {
         manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "123451656")))
     }
     
-    func getPublisher2(manager: NetworkManager) -> AnyPublisher<(SignInResponse?, ServerError?), Error> {
-        manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "123451656")))
+    func getPublisher2(manager: NetworkManager) -> AnyPublisher<SignInResponse, ServerError> {
+        manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "1234565")))
     }
 }
 
@@ -61,7 +62,19 @@ final class TestInterceptor: RequestInterceptor {
     
 }
 
-struct ServerError: Decodable {
+struct ServerError: ServerErrorProtocol {
+    init(description: String?) {
+        self.init(description: description, message: "", subErrorType: "", exceptionType: 0)
+    }
+    
+    init(description: String? = nil, message: String, subErrorType: String, exceptionType: Int) {
+        self.description = description
+        self.message = message
+        self.subErrorType = subErrorType
+        self.exceptionType = exceptionType
+    }
+    
+    var description: String?
     let message: String
     let subErrorType: String
     let exceptionType: Int

@@ -13,5 +13,5 @@ public protocol NetworkMananagerProtocol {
     typealias ResultResponse<T: Decodable, S: Decodable> = Result<NetworkResponse<T,S>, Never>
     
     func execute<Response: Decodable, ServerError: Decodable>(with urlRequest: URLRequestConvertible) -> ResultPublisher<Response, ServerError>
-    func execute<Response: Decodable, ServerError: Decodable>(with urlRequest: URLRequestConvertible) -> AnyPublisher<(Response?, ServerError?), Error>
+    func execute<Response: Decodable, ServerError: ServerErrorProtocol>(with urlRequest: URLRequestConvertible) -> AnyPublisher<Response, ServerError>
 }
