@@ -52,7 +52,9 @@ final class TestEventMonitor: EventMonitor {
 }
 
 final class MockHttpProperyProvider: HttpPropertyProviderProtocol {
-    
+    func getBaseUrl() -> String {
+        "https://hesabinibil.azurewebsites.net/api"
+    }
 }
 
 final class TestInterceptor: RequestInterceptor {
@@ -77,6 +79,6 @@ struct SignInRequest: Encodable {
 
 final class GetStockListServiceProvider: ApiServiceProvider {
     init(httpPropertyProvider: HttpPropertyProviderProtocol, request: SignInRequest) {
-        super.init(baseUrl: "https://hesabinibil.azurewebsites.net/api", method: .post, path: "/Auth/SignIn", httpPropertyProvider: httpPropertyProvider, isAuthRequested: false, data: request)
+        super.init(httpPropertyProvider: httpPropertyProvider, method: .post, path: "/Auth/SignIn", data: request)
     }
 }

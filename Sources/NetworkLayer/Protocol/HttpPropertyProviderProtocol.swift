@@ -8,6 +8,7 @@
 import Alamofire
 
 public protocol HttpPropertyProviderProtocol {
+    func getBaseUrl() -> String
     func getHttpHeaders() -> HTTPHeaders
     func getParameterEncoding(by method: HTTPMethod) -> ParameterEncoding
 }
