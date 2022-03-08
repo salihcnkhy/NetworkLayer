@@ -14,6 +14,8 @@ open class ApiServiceProvider: URLRequestConvertible {
     private var path: String?
     private var isAuthRequested: Bool
     private var data: Encodable?
+    private var defaultQueryParams: [URLQueryItem]?
+    
     private let httpPropertyProvider: HttpPropertyProviderProtocol
     
     /// Description: General Api call service provider. It's create a urlRequestConvertible object to pass as an argument to alamofire url session request
@@ -22,12 +24,13 @@ open class ApiServiceProvider: URLRequestConvertible {
     ///   - path: url path, default value is nil
     ///   - isAuthRequested: it's used to pass accessToken to header or not. Default value is true
     ///   - data: Codable data. If request is post, patch or put it's used as body otherwise as query string
-    public init(httpPropertyProvider: HttpPropertyProviderProtocol, method: HTTPMethod = .get, path: String? = nil, data: Encodable? = nil, isAuthRequested: Bool = true) {
+    public init(httpPropertyProvider: HttpPropertyProviderProtocol, method: HTTPMethod = .get, path: String? = nil, data: Encodable? = nil, defaultQueryParams: [URLQueryItem]? = nil, isAuthRequested: Bool = true) {
         self.method = method
         self.path = path
         self.isAuthRequested = isAuthRequested // Later will be using
         self.data = data
         self.httpPropertyProvider = httpPropertyProvider
+        self.defaultQueryParams = defaultQueryParams
     }
     
     public func asURLRequest() throws -> URLRequest {
@@ -37,7 +40,13 @@ open class ApiServiceProvider: URLRequestConvertible {
             url = url.appendingPathComponent(path)
         }
         
-        var request = URLRequest(url: url)
+        var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: true)!
+
+        if let defaultQueryParams = defaultQueryParams {
+            urlComponents.queryItems = defaultQueryParams
+        }
+
+        var request = URLRequest(url: urlComponents.url!)
         request.httpMethod = method.rawValue
         request.headers = headers
         request.cachePolicy = .reloadIgnoringCacheData
