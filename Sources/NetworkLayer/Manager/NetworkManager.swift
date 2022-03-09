@@ -21,7 +21,7 @@ public final class NetworkManager: NetworkMananagerProtocol {
     
     public func execute<Response: Decodable, ServerError: ServerErrorProtocol>(with urlRequest: URLRequestConvertible) -> AnyPublisher<Response, ServerError> {
         session.request(urlRequest)
-            .validate()
+            //.validate() // for now, do not check for status code. Later will be added custom validatators here.
             .publishData()
             .compactMap { $0.result }
             .tryMap { (result: Result<Data, AFError>) -> Response in
@@ -35,12 +35,8 @@ public final class NetworkManager: NetworkMananagerProtocol {
                             throw ServerError.init(description: "unexpected")
                         }
                     case .failure(let failure):
-                        if let errorData = try? result.get(), let serverError = try? self.decoder.decode(ServerError.self, from: errorData) {
-                            throw serverError
-                        } else {
-                            let error = ServerError.init(description: failure.localizedDescription)
-                            throw error
-                        }
+                        let error = ServerError.init(description: failure.localizedDescription)
+                        throw error
                 }
             }
             .mapError { $0 as! ServerError }
