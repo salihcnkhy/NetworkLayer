@@ -1,6 +1,7 @@
 import XCTest
 import Alamofire
 import Combine
+import NetworkEntityLayer
 
 @testable import NetworkLayer
 
@@ -11,17 +12,7 @@ final class NetworkLayerTests: XCTestCase {
     func testExample() throws {
         let manager = NetworkManager(configuration: .default, interceptor: TestInterceptor(), eventMonitors: [TestEventMonitor()])
         let expectation = expectation(description: "Sink")
-        getPublisher(manager: manager).sink { output in
-            print(output)
-            expectation.fulfill()
-        }.store(in: &cancellables)
-        waitForExpectations(timeout: 10)
-    }
-    
-    func testExample2() throws {
-        let manager = NetworkManager(configuration: .default, interceptor: TestInterceptor(), eventMonitors: [TestEventMonitor()])
-        let expectation = expectation(description: "Sink")
-        getPublisher2(manager: manager).sink(receiveCompletion: { error in
+        getPublisher(manager: manager).sink(receiveCompletion: { error in
             print(error)
             expectation.fulfill()
         }, receiveValue: { (response) in
@@ -32,12 +23,7 @@ final class NetworkLayerTests: XCTestCase {
     }
 
 
-    
-    func getPublisher(manager: NetworkManager) -> AnyPublisher<NetworkResponse<SignInResponse, ServerError>, Never> {
-        manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "123451656")))
-    }
-    
-    func getPublisher2(manager: NetworkManager) -> AnyPublisher<SignInResponse, ServerError> {
+    func getPublisher(manager: NetworkManager) -> AnyPublisher<SignInResponse, ServerError> {
         manager.execute(with: GetStockListServiceProvider(httpPropertyProvider: MockHttpProperyProvider(), request: SignInRequest(email: "test@test.com", password: "1234565")))
     }
 }
