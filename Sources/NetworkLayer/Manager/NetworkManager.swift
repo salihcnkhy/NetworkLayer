@@ -35,8 +35,12 @@ public final class NetworkManager: NetworkMananagerProtocol {
                             throw ServerError.init(description: "unexpected")
                         }
                     case .failure(let failure):
-                        let error = ServerError.init(description: failure.localizedDescription)
-                        throw error
+                        if let errorData = try? result.get(), let serverError = try? self.decoder.decode(ServerError.self, from: errorData) {
+                            throw serverError
+                        } else {
+                            let error = ServerError.init(description: failure.localizedDescription)
+                            throw error
+                        }
                 }
             }
             .mapError { $0 as! ServerError }
