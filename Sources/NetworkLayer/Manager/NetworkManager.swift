@@ -1,14 +1,14 @@
 //
-//  File.swift
+//  NetworkManager.swift
 //  
 //
-//  Created by 112471 on 26.01.2022.
+//  Created by Salihcan Kahya on 26.01.2022.
 //
 
-import Foundation
 import Alamofire
-import NetworkEntityLayer
 import Combine
+import NetworkEntityLayer
+import Foundation
 
 public final class NetworkManager: NetworkMananagerProtocol {
     
@@ -21,7 +21,7 @@ public final class NetworkManager: NetworkMananagerProtocol {
     
     public func execute<Response: Decodable, ServerError: ServerErrorProtocol>(with urlRequest: URLRequestConvertible) -> AnyPublisher<Response, ServerError> {
         session.request(urlRequest)
-            //.validate() // for now, do not check for status code. Later will be added custom validatators here.
+        //.validate() // for now, do not check for status code. Later will be added custom validatators here.
             .publishData()
             .compactMap { $0.result }
             .tryMap { (result: Result<Data, AFError>) -> Response in
@@ -40,6 +40,22 @@ public final class NetworkManager: NetworkMananagerProtocol {
                 }
             }
             .mapError { $0 as! ServerError }
+            .eraseToAnyPublisher()
+    }
+    
+    public func execute(with urlRequest: URLRequestConvertible) -> AnyPublisher<Data, Error> {
+        session.request(urlRequest)
+        //.validate() // for now, do not check for status code. Later will be added custom validatators here.
+            .publishData()
+            .compactMap { $0.result }
+            .tryMap { (result: Result<Data, AFError>) -> Data in
+                switch result {
+                    case .success(let data):
+                        return data
+                    case .failure(let failure):
+                        throw failure
+                }
+            }
             .eraseToAnyPublisher()
     }
 }
